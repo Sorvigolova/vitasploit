@@ -1,0 +1,42 @@
+<html>
+<body>
+
+<script type="text/javascript">
+// Check the Vita's firmware version and
+// launch the appropriate exploit.
+var ua = navigator.userAgent;
+if ((ua.indexOf("Vita 3.36") != -1) || 
+	(ua.indexOf("Vita 3.35") != -1) || 
+	(ua.indexOf("Vita 3.30") != -1))
+{
+	window.location = "FW_330_336.html";
+} 
+else if ((ua.indexOf("Vita 3.20") != -1) ||
+	(ua.indexOf("Vita 3.18") != -1) ||
+	(ua.indexOf("Vita 3.15") != -1) ||
+	(ua.indexOf("Vita 3.12") != -1) ||
+	(ua.indexOf("Vita 3.10") != -1) ||
+	(ua.indexOf("Vita 3.01") != -1) ||
+	(ua.indexOf("Vita 3.00") != -1) ||
+	(ua.indexOf("Vita 2.61") != -1) ||
+	(ua.indexOf("Vita 2.60") != -1) ||
+	(ua.indexOf("Vita 2.50") != -1) ||
+	(ua.indexOf("Vita 2.12") != -1) ||
+	(ua.indexOf("Vita 2.11") != -1) ||
+	(ua.indexOf("Vita 2.10") != -1) ||
+	(ua.indexOf("Vita 2.06") != -1) ||
+	(ua.indexOf("Vita 2.05") != -1) ||
+	(ua.indexOf("Vita 2.02") != -1) ||
+	(ua.indexOf("Vita 2.01") != -1) ||
+	(ua.indexOf("Vita 2.00") != -1))
+{
+	window.location = "FW_200_320.html";
+}
+else
+{
+	alert("Unsupported firmware version!");
+}
+</script>
+
+</body>
+</html>

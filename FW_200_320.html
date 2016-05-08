@@ -1,0 +1,122 @@
+<html>
+<body>
+<script src="include/FW_200_320/exploit.js"></script>
+<script src="include/FW_200_320/jquery.min.js"></script>
+<script src="include/FW_200_320/lib.js"></script>
+<script src="include/FW_200_320/rop.js"></script>
+<script src="include/FW_200_320/functions.js"></script>
+<script src="include/FW_200_320/shell.js"></script>
+<script src="include/FW_200_320/utils.js"></script>
+
+<script type="text/javascript">
+var doSyscallFuzz = false;
+var syscallFuzzVersion = "318";
+var doROP = true;
+var useShell = true;
+var updateIntervalTime = 20;
+
+// Global vars
+var moduleBase = {};
+var log_out_filepath = "log.txt"; // Comment out to disable log_out.
+var _gc, _cnt = 0;
+var leakedptr;
+        
+/*
+   Main
+*/
+$(document).ready(function()
+{
+    try {
+        var found = 0;
+        
+		for(var i = 0; i < 20; i++)
+		{
+            var res = initMemoryHole(doROP);
+            if (res != -1) {
+				found = 1;
+				break
+			};
+        }
+
+        if (found == 0)
+		{
+            logdbg("Initialization failed!");
+            return;
+        }
+        
+        delayedScripts = [
+            "include/FW_200_320/js-struct.js",
+            "include/FW_200_320/functions_ex.js",
+            "include/FW_200_320/tests.js",
+            "include/FW_200_320/errors.js"
+        ]
+		
+		if (doSyscallFuzz)
+		{
+			delayedScripts.push("include/FW_200_320/syscall_fuzzer/fuzzer.js");
+			delayedScripts.push("include/FW_200_320/syscall_fuzzer/syscall_map_" + syscallFuzzVersion + ".js");
+		}
+
+        if (!delayedScripts || delayedScripts.length == 0) 
+		{
+            OnScriptsLoaded();
+        }
+        else 
+		{
+            delayedScriptsLoaded = 0;
+            currentDelayedScript = -1;
+     
+            window.setTimeout(function() { TryLoadScript() }, 100);
+        }
+    }
+	catch(e)
+	{
+        logdbg("MainError: " + e);
+    }
+});
+
+function OnScriptsLoaded()
+{
+    Run_Test();
+    
+    if (useShell) 
+	{
+        shell(aspace);
+    }
+    else 
+	{        
+        updateInterval = window.setInterval(function() { UpdateFunc() }, updateIntervalTime);
+    }
+}
+
+function TryLoadScript()
+{
+    if (delayedScriptsLoaded == delayedScripts.length)
+	{
+        OnScriptsLoaded();
+        return;
+    }
+    
+    if (currentDelayedScript < delayedScriptsLoaded)
+    {
+        currentDelayedScript = delayedScriptsLoaded;
+        
+        var script = delayedScripts[delayedScriptsLoaded];
+        $.get(script, function(data)
+		{
+			logdbg("Loaded " + delayedScripts[delayedScriptsLoaded] + " (" + (delayedScriptsLoaded + 1).toString() + "/" + delayedScripts.length.toString() + ")");        
+            ++delayedScriptsLoaded;
+            
+            window.setTimeout(function() { TryLoadScript() }, 50);
+        });    
+    }
+}
+
+function UpdateFunc()
+{
+}
+</script>
+
+<div id="log"></div>
+</body>
+</html>

